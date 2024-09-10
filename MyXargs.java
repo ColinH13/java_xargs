@@ -4,12 +4,17 @@ import java.io.InputStreamReader;
 
 
 public class MyXargs {
+
     public static void main(String[] args) {
 
-        int maxArgs = Integer.MAX_VALUE;
-        String placeholder = null;
-        boolean printOption = false;
-        boolean preventEmptyInput = false;
+        boolean nFlag = false;              // Determines if  n flag is used, indicates to look for maxArgs
+        int maxArgs = Integer.MAX_VALUE;    // Indicates max number of arguments to pass to command at one time
+        
+        boolean iFlag = false;              // Determines if I flag is used, indicates to look for placeholder
+        String placeholder = null;          // Indicates placeholder string to be replaced by input read from stdin
+        
+        boolean tFlag = false;              // Indicates to print entire command before executing
+        boolean rFlag = false;              // Indicates to not run the command if no input is provided
 
         // Verifies there are arguments after 
         if (args.length == 0) {
@@ -29,14 +34,17 @@ public class MyXargs {
         }   catch (IOException e) {
             System.out.println("Error reading input: " + e.getMessage());
         }
-        
-        if (input != null) {
-        String[] arguments = input.toString().trim().split(" "); // This array holds initial arguments
-           // System.out.println("Arguments:"); // Test printing out arguments
+
+        System.out.println("input = " + input);
+        String sanitizedInput = input.toString().replaceAll("[;&|<>*()?$]", "");
+        System.out.println("Sanitized input: " + sanitizedInput);
+
+
+        String[] arguments = sanitizedInput.trim().split(" "); // This array holds initial arguments
+        // System.out.println("Arguments:"); // Test printing out arguments
            for (String str : arguments) {
                System.out.println(str);
            }
-        }
 
         // Testing to determine the arguments after the file executable.
         int p = 0;
@@ -45,13 +53,54 @@ public class MyXargs {
             System.out.println("args at " + p + ": " + arg);
             p++;
         }
+        
+
+        // Determine flags and logic
+        int k = 0;
+        for (String arg: args) {
+            k++;
+            switch (arg) {
+                case "-n":
+                nFlag = true;
+                maxArgs = Integer.parseInt(args[k + 1]); // Assigns int value of next arg to maxArgs variable.
+                break;
+
+                case "-I": 
+                iFlag = true;
+                placeholder = args[k + 1];
+                break;
+
+                case "-t":
+                tFlag = true;
+                break;
+
+                case "-r":
+                rFlag = true;
+                break;
+
+                default: System.out.println("arg parser: " + arg);
+            }
+        }
 
         
 
-        
 
 
+
+            String ex = " pb command not set"; // Shows Work in Progress
+            ProcessBuilder pb = new ProcessBuilder("cmd.exe", "/c", "echo" + ex);
         
-        
+            pb.inheritIO(); // Make the subprocess use the same I/O as the parent process
+    
+            try {
+                Process process = pb.start();
+                process.waitFor(); // Wait for the process to finish
+            } catch (IOException | InterruptedException e) {
+                e.printStackTrace();
+            }
+
+
+
+
+    }    
     }
-}
