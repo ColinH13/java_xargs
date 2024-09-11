@@ -1,6 +1,8 @@
 import java.io.IOException;
 import java.io.BufferedReader;
 import java.io.InputStreamReader;
+import java.util.*;
+import java.util.function.Supplier; 
 
 
 public class MyXargs {
@@ -16,7 +18,7 @@ public class MyXargs {
         boolean tFlag = false;              // Indicates to print entire command before executing
         boolean rFlag = false;              // Indicates to not run the command if no input is provided
 
-        // Verifies there are arguments after 
+        // Verifies there are arguments after
         if (args.length == 0) {
             System.out.println("Usage: java MyXargs.java [-n num] [-I replace] [-t] [-r] command");
         }
@@ -40,9 +42,9 @@ public class MyXargs {
         System.out.println("Sanitized input: " + sanitizedInput);
 
 
-        String[] arguments = sanitizedInput.trim().split(" "); // This array holds initial arguments
+        String[] inputList = sanitizedInput.trim().split(" "); // This array holds initial arguments
         // System.out.println("Arguments:"); // Test printing out arguments
-           for (String str : arguments) {
+           for (String str : inputList) {
                System.out.println(str);
            }
 
@@ -57,6 +59,7 @@ public class MyXargs {
 
         // Determine flags and logic
         int k = 0;
+        String baseCmd = "";
         for (String arg: args) {
             k++;
             switch (arg) {
@@ -78,9 +81,50 @@ public class MyXargs {
                 rFlag = true;
                 break;
 
-                default: System.out.println("arg parser: " + arg);
+                default: 
+                baseCmd = arg;
+                System.out.println("arg parser: " + arg);
             }
         }
+
+        if (rFlag) {
+            System.out.println("length: " + inputList.length);
+            if (inputList.length == 1) {
+                System.out.println("Program intentionally terminated as no input was provided");
+                System.exit(0);
+            }
+        }
+        
+        // Initialize base command (baseCmd)
+        List <String> commandList = new ArrayList<String>();
+
+        for (int i  = 0; i < inputList.length; ++i) {
+            if (iFlag) {
+                baseCmd.replace(placeholder,inputList[i]);
+            }
+            int endIndex;
+            if (nFlag) {
+                for (int j = 0; j < inputList.length; j+=maxArgs) { // TODO: Might need to remove this for loop
+                    if (j + maxArgs > inputList.length) {
+                        endIndex = inputList.length;
+                    } else {endIndex = j + maxArgs;}
+                    for (int n = j; n < endIndex; n++) {
+                        System.out.print(baseCmd + " " + inputList[n]); // Tests groupings
+                        commandList.add(baseCmd + " " + inputList[n]); // Add commands to commandList to be executed
+                    }
+                    System.out.println(""); // Test groupings, to be removed
+                }
+            }
+            else {
+                String cmd = baseCmd + baseCmd + " " + inputList[i];
+            }
+        }
+
+        System.out.print("commandList: ");
+        for (String arg: commandList) {
+            System.out.println("arg" + arg);
+        }
+
 
         
 
@@ -88,8 +132,9 @@ public class MyXargs {
 
 
             String ex = " pb command not set"; // Shows Work in Progress
-            ProcessBuilder pb = new ProcessBuilder("cmd.exe", "/c", "echo" + ex);
-        
+            ProcessBuilder pb = new ProcessBuilder("cmd.exe", "/c", "echo" + ex); // Default to echo cmd
+            int l = 0;
+            pb.command(); // Updates the command that pb will run
             pb.inheritIO(); // Make the subprocess use the same I/O as the parent process
     
             try {
@@ -98,9 +143,5 @@ public class MyXargs {
             } catch (IOException | InterruptedException e) {
                 e.printStackTrace();
             }
-
-
-
-
     }    
     }
