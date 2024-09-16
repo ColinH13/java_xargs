@@ -93,10 +93,11 @@ public class MyXargs {
                 case "-outputFormat":
                 break;
 
+
                 default: 
                 if (args[i].startsWith("-")) {
                     break; // Ignore unrecognized flags
-                }
+                } if (args[i] == placeholder) {break;}
                 if (isInt(args[i])) { break; }
                 baseArgs.add(args[i]);
                 //baseCmd.append(args[i]);
@@ -109,7 +110,7 @@ public class MyXargs {
         String baseCmd = String.join(" ", baseArgs);
         System.out.println("Base command: " + baseCmd);
         System.out.println("placeholder: " + placeholder);
-        nFlag = true; // 
+        nFlag = true; 
 
         if (rFlag) {
             System.out.println("length: " + inputList.length);
@@ -123,23 +124,52 @@ public class MyXargs {
         List <String> commandList = new ArrayList<String>();
 
        
-       
+       if (maxArgs > inputList.length) {
+        maxArgs = inputList.length;
+       }
         String finalCmd = baseCmd.toString();
         for (int i  = 0; i < inputList.length; ++i) {
             if (iFlag) {
-                finalCmd = baseCmd.toString().replace(placeholder,inputList[i]);
-            }
-            if (nFlag) {
+                int cmdCounter = 0;
+                //if (nFlag && maxArgs >= inputList.length) {
+                    System.out.println("nFlag: " + nFlag);
+                    finalCmd = baseCmd.replace(placeholder, "");
                     int endIndex;
                     if (i + maxArgs > inputList.length) {
                         endIndex = inputList.length;
                     } else {endIndex = i + maxArgs;}
-                    StringBuilder newCmd = new StringBuilder(baseCmd);
+                    StringBuilder newCmd = new StringBuilder(finalCmd);
                         System.out.println();
                         for (int j = i; j < endIndex; j++) {
                         System.out.println("appending here: ");
                         System.out.println(newCmd + " " + inputList[j]); // TODO: Tests groupings
-                        newCmd.append(" ").append(inputList[j]);
+                        if (cmdCounter == 0) {newCmd.append("").append(inputList[j]);
+                        System.out.println("cmdCounter: " + cmdCounter);
+                    }
+                        else {newCmd.append(" ").append(inputList[j]);}
+                        cmdCounter++;
+                        }
+                        cmdCounter = 0;
+                    
+                    System.out.println("\nnewCmd: " + newCmd);
+                    commandList.add(newCmd.toString());
+                    System.out.println("Command: " + newCmd.toString());
+                i += maxArgs - 1;
+                if (i == inputList.length) {i--;}
+                finalCmd = baseCmd.replace(placeholder,inputList[i]);
+            }
+            else if (nFlag) {
+                    int endIndex;
+                    if (i + maxArgs > inputList.length) {
+                        endIndex = inputList.length;
+                    } else {endIndex = i + maxArgs;}
+                    StringBuilder newCmd = new StringBuilder(finalCmd);
+                        System.out.println();
+                        for (int j = i; j < endIndex; j++) {
+                        System.out.println("appending here: ");
+                        System.out.println(newCmd + " " + inputList[j]); // TODO: Tests groupings
+                        if (!iFlag) {newCmd.append(" ");}
+                        newCmd.append(inputList[j]);
                         }
                     
                     System.out.println("\nnewCmd: " + newCmd);
@@ -148,7 +178,8 @@ public class MyXargs {
                 i += maxArgs - 1;
             }
             else {
-                String cmd = baseCmd + " " + inputList[i];
+                
+                String cmd = finalCmd + " " + inputList[i];
                 commandList.add(cmd);
                 System.out.println("Command: " + cmd); // Test to print command groupings
             }
@@ -162,14 +193,14 @@ public class MyXargs {
 
             // Executes all commands in the commandList
             String ex = " pb command not set"; // Shows Work in Progress
-            ProcessBuilder pb = new ProcessBuilder("cmd.exe", "/c", "echo" + ex); // Default to echo cmd
+            ProcessBuilder pb = new ProcessBuilder("echo" + ex); // Default to echo cmd
             int l = 0;
             pb.inheritIO(); // Make the subprocess use the same I/O as the parent process
 
             System.out.println("Command output: "); // TODO: Remove testing print
             // For each cmd in the commandList, update the pb cmd and execute
             for (String cmd : commandList) {
-                pb.command("cmd.exe", "/c", cmd);            // Updates the command that pb will run
+                pb.command(/*"cmd.exe", "/c", */cmd);            // Updates the command that pb will run
                 if (tFlag) {System.out.println("+ " + cmd);} // Outputs command before executing
             try {
                 Process process = pb.start();
@@ -182,8 +213,6 @@ public class MyXargs {
 
 
     } // end of main method
-    
-    
     
     // Checks if the provided string can be converted to an integer
     public static boolean isInt(String str) {
