@@ -2,10 +2,7 @@ import java.io.IOException;
 import java.io.BufferedReader;
 import java.io.InputStreamReader;
 import java.util.*;
-import java.util.function.Supplier; 
-import java.util.*;
-import java.util.function.Supplier; 
-
+import java.util.function.Supplier;
 
 public class MyXargs {
 
@@ -22,7 +19,7 @@ public class MyXargs {
 
         List<String> baseArgs = new ArrayList<>();
 
-        // Verifies there are arguments after
+        // Verifies there are arguments for the program
         if (args.length == 0) {
             System.out.println("Usage: java MyXargs.java [-n num] [-I replace] [-t] [-r] command");
             System.exit(0);
@@ -36,50 +33,46 @@ public class MyXargs {
         try {
             if (reader.ready()) {
                 line = reader.readLine();
-                System.out.println("line: " + line);
-                input.append(line).append(" "); // Append each line to input with a space separator
+                //System.out.println("line: " + line);
+                input.append(line).append(" ");     // Append each line to input with a space separator
             }
         }   catch (IOException e) {
             System.out.println("Error reading input: " + e.getMessage());
         }
-
-        System.out.println("input = " + input);
+        
+        // Sanitize args and input
+        for (int i = 0; i < args.length; ++i) {
+            args[i] = args[i].replaceAll("[;&|<>*()?$]", "");
+        }
         String sanitizedInput = input.toString().replaceAll("[;&|<>*()?$]", "");
-        System.out.println("Sanitized input: " + sanitizedInput);
-
-
+        //System.out.println("Sanitized input: " + sanitizedInput);
         String[] inputList = sanitizedInput.trim().split(" "); // This array holds initial arguments
+        
+        /*
         // System.out.println("Arguments:"); // Test printing out arguments
            for (String str : inputList) {
                System.out.println(str);
            }
 
         // Testing to determine the arguments after the file executable.
-        int p = 0;
-
-        for (String arg: args) {
-            System.out.println("args at " + p + ": " + arg);
-            p++;
+        for (int i = 0; i < args.length; ++i) {
+            System.out.println("args at " + i + ": " + args[i]);
         }
-        
+        */
 
-
-        // Determine flags and logic
-        //StringBuilder baseCmd = new StringBuilder("");
+        // Determines flags and logic
+        // StringBuilder baseCmd = new StringBuilder("");
         for (int i = 0; i < args.length; ++i) {
             switch (args[i]) {
                 case "-n":
                 nFlag = true;
                 if (isInt(args[i+1])) {maxArgs = Integer.parseInt(args[i + 1]); } // Assigns int value of next arg to maxArgs variable.
-                
                 break;
 
                 case "-I":
                 iFlag = true;
                 placeholder = args[i + 1];
-                System.out.println("placeholder: " + placeholder);
-                System.out.println("args[i + 1]" + args[i + 1]);
-                System.out.println("blabalsdasdjhlsadjlsakdjlaskdjlsakjdlsajd");
+                // System.out.println("placeholder: " + placeholder); // Tests if expected placeholder is printed
                 break;
 
                 case "-t":
@@ -90,32 +83,24 @@ public class MyXargs {
                 rFlag = true;
                 break;
 
-                case "-outputFormat":
-                break;
-
-
                 default: 
                 if (args[i].startsWith("-")) {
                     break; // Ignore unrecognized flags
                 } if (args[i] == placeholder) {break;}
                 if (isInt(args[i])) { break; }
                 baseArgs.add(args[i]);
-                //baseCmd.append(args[i]);
                 //System.out.println("arg parser: " + baseCmd); // TODO: Remove Testing method
             }
         }
 
-        System.out.println("iflag is: "+ iFlag);
-        System.out.println("baseArgs: " + baseArgs);
         String baseCmd = String.join(" ", baseArgs);
-        System.out.println("Base command: " + baseCmd);
-        System.out.println("placeholder: " + placeholder);
+        //System.out.println("Base Command: " + baseCmd);       // Outputs command that program runs (i.e. rm, echo, etc.)
+        //System.out.println("placeholder: " + placeholder);    // Outputs placeholder for -I testing
         nFlag = true; 
 
         if (rFlag) {
-            System.out.println("length: " + inputList.length);
             if (inputList.length == 1) {
-                System.out.println("Program intentionally terminated as no input was provided");
+                //System.out.println("Program intentionally terminated as no input was provided");
                 System.exit(0);
             }
         }
@@ -123,7 +108,6 @@ public class MyXargs {
         // Initialize base command (baseCmd)
         List <String> commandList = new ArrayList<String>();
 
-       
        if (maxArgs > inputList.length) {
         maxArgs = inputList.length;
        }
@@ -132,28 +116,21 @@ public class MyXargs {
             if (iFlag) {
                 int cmdCounter = 0;
                 //if (nFlag && maxArgs >= inputList.length) {
-                    System.out.println("nFlag: " + nFlag);
                     finalCmd = baseCmd.replace(placeholder, "");
                     int endIndex;
                     if (i + maxArgs > inputList.length) {
                         endIndex = inputList.length;
                     } else {endIndex = i + maxArgs;}
                     StringBuilder newCmd = new StringBuilder(finalCmd);
-                        System.out.println();
                         for (int j = i; j < endIndex; j++) {
-                        System.out.println("appending here: ");
-                        System.out.println(newCmd + " " + inputList[j]); // TODO: Tests groupings
                         if (cmdCounter == 0) {newCmd.append("").append(inputList[j]);
-                        System.out.println("cmdCounter: " + cmdCounter);
                     }
                         else {newCmd.append(" ").append(inputList[j]);}
                         cmdCounter++;
                         }
                         cmdCounter = 0;
                     
-                    System.out.println("\nnewCmd: " + newCmd);
                     commandList.add(newCmd.toString());
-                    System.out.println("Command: " + newCmd.toString());
                 i += maxArgs - 1;
                 if (i == inputList.length) {i--;}
                 finalCmd = baseCmd.replace(placeholder,inputList[i]);
@@ -164,44 +141,33 @@ public class MyXargs {
                         endIndex = inputList.length;
                     } else {endIndex = i + maxArgs;}
                     StringBuilder newCmd = new StringBuilder(finalCmd);
-                        System.out.println();
                         for (int j = i; j < endIndex; j++) {
-                        System.out.println("appending here: ");
-                        System.out.println(newCmd + " " + inputList[j]); // TODO: Tests groupings
                         if (!iFlag) {newCmd.append(" ");}
                         newCmd.append(inputList[j]);
                         }
                     
-                    System.out.println("\nnewCmd: " + newCmd);
                     commandList.add(newCmd.toString());
-                    System.out.println("Command: " + newCmd.toString());
                 i += maxArgs - 1;
             }
             else {
-                
                 String cmd = finalCmd + " " + inputList[i];
                 commandList.add(cmd);
-                System.out.println("Command: " + cmd); // Test to print command groupings
             }
         }
-
-
+        /* 
         System.out.println("commandList: ");
         for (String cmd: commandList) {
             System.out.println("cmd: " + cmd);
-        }
+        } */
 
-            // Executes all commands in the commandList
-            String ex = " pb command not set"; // Shows Work in Progress
-            ProcessBuilder pb = new ProcessBuilder("echo" + ex); // Default to echo cmd
-            int l = 0;
-            pb.inheritIO(); // Make the subprocess use the same I/O as the parent process
+        for (String cmd: commandList) {
+            String[] cmdArray = cmd.split(" ");
+            List<String> argumentList = new ArrayList<>(Arrays.asList(cmdArray));
+            ProcessBuilder pb = new ProcessBuilder(argumentList);
+            pb.inheritIO();
 
-            System.out.println("Command output: "); // TODO: Remove testing print
-            // For each cmd in the commandList, update the pb cmd and execute
-            for (String cmd : commandList) {
-                pb.command(/*"cmd.exe", "/c", */cmd);            // Updates the command that pb will run
-                if (tFlag) {System.out.println("+ " + cmd);} // Outputs command before executing
+            if (tFlag) {System.out.println("+ " + cmd);} // Outputs command before executing
+
             try {
                 Process process = pb.start();
                 process.waitFor();          // Wait for the process to finish
@@ -210,10 +176,22 @@ public class MyXargs {
             }
         }
 
+        /* 
+            // Executes all commands in the commandList
+            String ex = " pb command not set"; // Shows Work in Progress
+            ProcessBuilder pb = new ProcessBuilder("echo" + ex); // Default to echo cmd
+            
+            pb.inheritIO(); // Make the subprocess use the same I/O as the parent process
 
-
+            System.out.println("Command output: "); // TODO: Remove testing print
+            // For each cmd in the commandList, update the pb cmd and execute
+            for (String cmd : commandList) {
+                pb.command("cmd.exe", "/c", cmd);            // Updates the command that pb will run
+                if (tFlag) {System.out.println("+ " + cmd);} // Outputs command before executing  
+        }
+        */
     } // end of main method
-    
+
     // Checks if the provided string can be converted to an integer
     public static boolean isInt(String str) {
             try {
@@ -222,7 +200,5 @@ public class MyXargs {
             } catch (NumberFormatException e) {
                 return false; 
             }
-        
     }
-
     } // end of main class
